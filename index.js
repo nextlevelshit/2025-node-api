@@ -1,19 +1,31 @@
 import express from "express";
 import {port} from "./src/config/constants.js"
+import {Cache} from "./src/services/Cache.js"
 
 const app = express();
+const cache = new Cache();
 
 app.use(express.json());
 
-app.get("/api", async (req, res) => {
-    res.json({message: "test"});
+app.get("/api/:key", async (req, res) => {
+    try {
+        const key = req.params.key;
+
+        const data = cache.get(key);
+
+        res.json(data);
+    } catch (e) {
+        console.error(e);
+
+        res.sendStatus(500);
+    }
 });
 
 app.post("/api", async (req, res) => {
     try {
         const body = req.body;
 
-        console.log(body);
+        cache.create(body);
 
         res.sendStatus(201);
     } catch (e) {
