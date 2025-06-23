@@ -7,16 +7,12 @@
     "start": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Hans Wurst",
+  "author": "Michael Czechowski <mail@m6c9.de>",
   "license": "WTFPL",
   "description": "",
-  "dependencies": {
-    "express": "^5.1.0",
-    "nodemon": "^3.1.10"
-  },
   "nodemonConfig": {
     "env": {
-      "PORT": "2025"
+      "PORT": "1312"
     }
   }
 }
