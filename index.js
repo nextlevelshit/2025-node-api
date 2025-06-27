@@ -32,7 +32,7 @@ app.get("/api/:key", async (req, res) => {
   } catch (e) {
     console.error(e);
 
-    res.sendStatus(500);
+    res.sendStatus(404);
   }
 });
 
@@ -42,8 +42,26 @@ app.post("/api", async (req, res) => {
 
     const { key } = cache.create(data);
 
-    res.send({ key });
+    res.status(201).json({ key });
   } catch (e) {
+    res.sendStatus(500);
+  }
+});
+
+app.put("/api/:key", async (req, res) => {
+  try {
+    const key = req.params.key;
+    const data = req.body;
+
+    if (key) {
+      const updatedData = cache.update(key, data);
+      res.json(updatedData);
+    } else {
+      const createdDate = cache.create(data, key);
+      res.status(201).json(createdDate);
+    }
+  } catch (e) {
+    console.error(e);
     res.sendStatus(500);
   }
 });

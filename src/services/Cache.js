@@ -25,12 +25,10 @@ export class Cache {
   /**
    * Create a new key with associated data.
    * @param data {any} - The data to associate with the new key
+   * @param key {string} - Optional custom key; if not provided, a timestamp will be used
    * @returns {{key: string, data: any}} - An object containing the new key and its associated data
    */
-  create(data) {
-    // Make sure key is unique and string
-    const key = Date.now().toString();
-
+  create(data, key = Date.now().toString()) {
     if (this.cache.has(key)) {
       throw new Error("Key already in use");
     }

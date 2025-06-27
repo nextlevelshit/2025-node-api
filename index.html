@@ -8,25 +8,25 @@
       /* Minimal brutalist styling because we're not here for beauty contests */
       body {
         font-family: "Courier New", monospace;
-        max-width: 1000px;
+        max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
         background: #f5f5f5;
       }
-
       .section {
         background: white;
         margin: 20px 0;
         padding: 20px;
         border: 2px solid #333;
       }
-
       .grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 20px;
       }
-
+      .full-width {
+        grid-column: 1 / -1;
+      }
       input,
       textarea,
       button {
@@ -37,7 +37,6 @@
         border: 1px solid #666;
         box-sizing: border-box;
       }
-
       button {
         background: #333;
         color: white;
@@ -45,11 +44,15 @@
         width: auto;
         padding: 10px 20px;
       }
-
       button:hover {
         background: #555;
       }
-
+      button.danger {
+        background: #cc0000;
+      }
+      button.danger:hover {
+        background: #aa0000;
+      }
       .response {
         background: #f9f9f9;
         border-left: 4px solid #007acc;
@@ -60,26 +63,24 @@
         max-height: 300px;
         overflow-y: auto;
       }
-
       .error {
         border-left-color: #cc0000;
       }
-
       .success {
         border-left-color: #00cc00;
       }
-
+      .warning {
+        border-left-color: #ff9900;
+      }
       .inline-buttons {
         display: flex;
         gap: 10px;
         flex-wrap: wrap;
       }
-
       .inline-buttons button {
         flex: 1;
         min-width: 120px;
       }
-
       .key-item {
         background: #eee;
         padding: 5px 10px;
@@ -88,16 +89,21 @@
         display: inline-block;
         cursor: pointer;
         border: 1px solid #ccc;
+        transition: background 0.2s;
       }
-
       .key-item:hover {
         background: #ddd;
+      }
+      .update-section {
+        border-top: 1px solid #ddd;
+        margin-top: 15px;
+        padding-top: 15px;
       }
     </style>
   </head>
   <body>
     <h1>Cache API Interface</h1>
-    <p>Simple CRUD for your cache service running on localhost:{{PORT}}</p>
+    <p>Complete CRUD operations for your cache service on localhost:{{PORT}}</p>
 
     <div class="grid">
       <!-- GET All Keys Section -->
@@ -116,7 +122,7 @@
       </div>
     </div>
 
-    <!-- POST Section -->
+    <!-- CREATE Section -->
     <div class="section">
       <h2>📝 CREATE Data</h2>
       <textarea
@@ -131,12 +137,31 @@
       <div id="postResponse" class="response" style="display: none"></div>
     </div>
 
-    <!-- Cache Stats Section -->
+    <!-- UPDATE Section -->
     <div class="section">
-      <h2>📊 Cache Status</h2>
+      <h2>✏️ UPDATE Data</h2>
+      <input type="text" id="updateKey" placeholder="Enter key to update" />
+      <textarea
+        id="updateData"
+        rows="6"
+        placeholder='{"updated": "data", "timestamp": "now"}'
+      ></textarea>
+      <div class="inline-buttons">
+        <button onclick="updateData()">Update Item</button>
+        <button onclick="fillUpdateSample()">Fill Sample Update</button>
+        <button onclick="loadForUpdate()">Load Selected Key</button>
+      </div>
+      <div id="updateResponse" class="response" style="display: none"></div>
+    </div>
+
+    <!-- Cache Management Section -->
+    <div class="section full-width">
+      <h2>📊 Cache Management</h2>
       <div class="inline-buttons">
         <button onclick="getCacheStats()">Refresh Stats</button>
         <button onclick="runQuickTest()">Run Full Test</button>
+        <button onclick="runCRUDTest()">Test CRUD Operations</button>
+        <button class="danger" onclick="clearCache()">⚠️ Clear Cache</button>
       </div>
       <div id="statsResponse" class="response" style="display: none"></div>
     </div>
@@ -157,23 +182,22 @@
             let output = `Found ${data.keys.length} keys:\n\n`;
 
             if (data.keys.length === 0) {
-              output += "Cache is empty";
+              output += "Cache is empty 🗑️";
             } else {
-              // Show clickable keys
               output += data.keys.map((key) => `📝 ${key}`).join("\n");
 
               // Add clickable key elements
               setTimeout(() => {
                 const keyContainer = document.createElement("div");
                 keyContainer.style.marginTop = "10px";
+                keyContainer.innerHTML =
+                  "<small>Click keys to select:</small><br>";
+
                 data.keys.forEach((key) => {
                   const keySpan = document.createElement("span");
                   keySpan.className = "key-item";
                   keySpan.textContent = key;
-                  keySpan.onclick = () => {
-                    document.getElementById("getKey").value = key;
-                    getData();
-                  };
+                  keySpan.onclick = () => selectKey(key);
                   keyContainer.appendChild(keySpan);
                 });
                 responseDiv.appendChild(keyContainer);
@@ -193,6 +217,15 @@
         }
       }
 
+      // Helper to select a key for operations
+      function selectKey(key) {
+        document.getElementById("getKey").value = key;
+        document.getElementById("updateKey").value = key;
+
+        // Auto-fetch the data to show current state
+        getData();
+      }
+
       // GET single item
       async function getData() {
         const key = document.getElementById("getKey").value.trim();
@@ -210,11 +243,17 @@
             const data = await response.json();
             const output = `✅ Retrieved data for key: ${key}\n\n${JSON.stringify(data, null, 2)}`;
             showResponse(responseDiv, output, "success");
+
+            // Auto-populate update field with current data
+            document.getElementById("updateData").value = JSON.stringify(
+              data,
+              null,
+              2,
+            );
           } else {
-            const errorText = await response.text();
             showResponse(
               responseDiv,
-              `❌ HTTP ${response.status}: ${errorText || "Key not found"}`,
+              `❌ HTTP ${response.status}: Key not found`,
               "error",
             );
           }
@@ -238,24 +277,22 @@
         }
 
         try {
-          // Validate JSON first
           const jsonData = JSON.parse(data);
 
           const response = await fetch(BASE_URL, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(jsonData),
           });
 
           if (response.ok) {
             const result = await response.json();
-            const output = `✅ Item created successfully!\n\nGenerated key: ${result.key}\n\nStored data:\n${JSON.stringify(result.data, null, 2)}`;
+            const output = `✅ Item created successfully!\n\nGenerated key: ${result.key}\n\nYou can now:\n- Click the key above to select it\n- Use GET to retrieve it\n- Use UPDATE to modify it`;
             showResponse(responseDiv, output, "success");
 
-            // Auto-refresh keys
+            // Auto-refresh keys and clear form
             getAllKeys();
+            document.getElementById("postData").value = "";
           } else {
             const errorText = await response.text();
             showResponse(
@@ -281,19 +318,138 @@
         }
       }
 
-      // Fill sample data
+      // PUT/UPDATE existing data
+      async function updateData() {
+        const key = document.getElementById("updateKey").value.trim();
+        const data = document.getElementById("updateData").value.trim();
+        const responseDiv = document.getElementById("updateResponse");
+
+        if (!key) {
+          showResponse(responseDiv, "Please enter a key to update", "error");
+          return;
+        }
+
+        if (!data) {
+          showResponse(responseDiv, "Please enter JSON data", "error");
+          return;
+        }
+
+        try {
+          const jsonData = JSON.parse(data);
+
+          const response = await fetch(`${BASE_URL}/${key}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(jsonData),
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            const output = `✅ Item updated successfully!\n\nKey: ${result.key}\n\nUpdated data:\n${JSON.stringify(result.data, null, 2)}`;
+            showResponse(responseDiv, output, "success");
+
+            // Refresh the GET section to show updated data
+            if (document.getElementById("getKey").value === key) {
+              getData();
+            }
+          } else {
+            const errorText = await response.text();
+            showResponse(
+              responseDiv,
+              `❌ HTTP ${response.status}: ${errorText}`,
+              "error",
+            );
+          }
+        } catch (error) {
+          if (error instanceof SyntaxError) {
+            showResponse(
+              responseDiv,
+              `❌ Invalid JSON: ${error.message}`,
+              "error",
+            );
+          } else {
+            showResponse(
+              responseDiv,
+              `❌ Network error: ${error.message}`,
+              "error",
+            );
+          }
+        }
+      }
+
+      // Load current data for updating
+      async function loadForUpdate() {
+        const key = document.getElementById("updateKey").value.trim();
+        if (!key) {
+          showResponse(
+            document.getElementById("updateResponse"),
+            "Please enter a key first",
+            "warning",
+          );
+          return;
+        }
+
+        try {
+          const response = await fetch(`${BASE_URL}/${key}`);
+          if (response.ok) {
+            const data = await response.json();
+            document.getElementById("updateData").value = JSON.stringify(
+              data,
+              null,
+              2,
+            );
+            showResponse(
+              document.getElementById("updateResponse"),
+              `✅ Loaded current data for key: ${key}`,
+              "success",
+            );
+          } else {
+            showResponse(
+              document.getElementById("updateResponse"),
+              `❌ Key not found: ${key}`,
+              "error",
+            );
+          }
+        } catch (error) {
+          showResponse(
+            document.getElementById("updateResponse"),
+            `❌ Error loading data: ${error.message}`,
+            "error",
+          );
+        }
+      }
+
+      // Fill sample data functions
       function fillSampleData() {
         const samples = [
           '{"message": "Hello Cache!", "timestamp": "' +
             new Date().toISOString() +
-            '"}',
-          '{"user": "michael", "action": "test", "data": [1, 2, 3, 4, 5]}',
-          '{"config": {"theme": "dark", "lang": "de"}, "preferences": {"notifications": true}}',
+            '", "type": "greeting"}',
+          '{"user": "michael", "action": "test", "data": [1, 2, 3, 4, 5], "priority": "high"}',
+          '{"config": {"theme": "dark", "lang": "de"}, "preferences": {"notifications": true}, "version": "1.0"}',
         ];
 
         const randomSample =
           samples[Math.floor(Math.random() * samples.length)];
         document.getElementById("postData").value = randomSample;
+      }
+
+      function fillUpdateSample() {
+        const samples = [
+          '{"message": "Updated message!", "timestamp": "' +
+            new Date().toISOString() +
+            '", "status": "modified"}',
+          '{"counter": ' +
+            Math.floor(Math.random() * 100) +
+            ', "updated_at": "' +
+            new Date().toISOString() +
+            '"}',
+          '{"metadata": {"version": "2.0", "author": "michael"}, "content": "Fresh content"}',
+        ];
+
+        const randomSample =
+          samples[Math.floor(Math.random() * samples.length)];
+        document.getElementById("updateData").value = randomSample;
       }
 
       // Get cache statistics
@@ -310,6 +466,7 @@
               `Total items: ${data.keys.length}\n` +
               `Keys: ${data.keys.length > 0 ? data.keys.join(", ") : "None"}\n` +
               `Server: localhost:{{PORT}}\n` +
+              `API Base: ${BASE_URL}\n` +
               `Last updated: ${new Date().toLocaleString("de-DE")}`;
 
             showResponse(responseDiv, stats, "success");
@@ -329,7 +486,93 @@
         }
       }
 
-      // Comprehensive test sequence
+      // Clear entire cache (dangerous!)
+      async function clearCache() {
+        if (!confirm("⚠️ This will delete ALL cached data. Are you sure?")) {
+          return;
+        }
+
+        const responseDiv = document.getElementById("statsResponse");
+        showResponse(
+          responseDiv,
+          "⚠️ Cache clearing not implemented in API yet",
+          "warning",
+        );
+      }
+
+      // Comprehensive CRUD test
+      async function runCRUDTest() {
+        const responseDiv = document.getElementById("statsResponse");
+        let log = "🚀 Running CRUD operations test...\n\n";
+
+        try {
+          const testKey = "test_" + Date.now();
+          const originalData = { message: "original", created: Date.now() };
+          const updatedData = { message: "updated", modified: Date.now() };
+
+          // CREATE
+          log += "1️⃣ CREATE operation...\n";
+          const createResponse = await fetch(BASE_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(originalData),
+          });
+
+          if (createResponse.ok) {
+            const createResult = await createResponse.json();
+            log += `   ✅ Created with key: ${createResult.key}\n`;
+
+            // READ
+            log += "\n2️⃣ READ operation...\n";
+            const readResponse = await fetch(`${BASE_URL}/${createResult.key}`);
+            if (readResponse.ok) {
+              const readData = await readResponse.json();
+              log += `   ✅ Retrieved data successfully\n`;
+
+              // UPDATE
+              log += "\n3️⃣ UPDATE operation...\n";
+              const updateResponse = await fetch(
+                `${BASE_URL}/${createResult.key}`,
+                {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(updatedData),
+                },
+              );
+
+              if (updateResponse.ok) {
+                log += `   ✅ Updated successfully\n`;
+
+                // READ again to verify update
+                log += "\n4️⃣ Verifying UPDATE...\n";
+                const verifyResponse = await fetch(
+                  `${BASE_URL}/${createResult.key}`,
+                );
+                if (verifyResponse.ok) {
+                  const verifiedData = await verifyResponse.json();
+                  const isUpdated = verifiedData.message === "updated";
+                  log += `   ${isUpdated ? "✅" : "❌"} Update verified: ${isUpdated}\n`;
+                }
+              } else {
+                log += `   ❌ UPDATE failed: ${updateResponse.status}\n`;
+              }
+            } else {
+              log += `   ❌ READ failed: ${readResponse.status}\n`;
+            }
+          } else {
+            log += `   ❌ CREATE failed: ${createResponse.status}\n`;
+          }
+
+          log += "\n🎉 CRUD test completed!";
+          showResponse(responseDiv, log, "success");
+          getAllKeys(); // Refresh keys
+        } catch (error) {
+          log += `\n❌ Test failed: ${error.message}`;
+          showResponse(responseDiv, log, "error");
+        }
+      }
+
+      // Original comprehensive test
       async function runQuickTest() {
         const responseDiv = document.getElementById("statsResponse");
         let log = "🚀 Running comprehensive test sequence...\n\n";
@@ -382,8 +625,6 @@
 
           log += "\n✅ Test sequence completed!";
           showResponse(responseDiv, log, "success");
-
-          // Refresh the keys display
           getAllKeys();
         } catch (error) {
           log += `\n❌ Test failed: ${error.message}`;
@@ -399,11 +640,14 @@
       }
 
       // Enter key support for inputs
-      document
-        .getElementById("getKey")
-        .addEventListener("keypress", function (e) {
-          if (e.key === "Enter") getData();
+      ["getKey", "updateKey"].forEach((id) => {
+        document.getElementById(id).addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            if (id === "getKey") getData();
+            else if (id === "updateKey") loadForUpdate();
+          }
         });
+      });
 
       // Auto-load keys on page load
       document.addEventListener("DOMContentLoaded", function () {
