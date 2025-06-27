@@ -1,11 +1,26 @@
 import express from "express";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+import { readFileSync } from "fs";
 import { port } from "./src/config/constants.js";
 import { Cache } from "./src/services/Cache.js";
 
-const app = express();
 const cache = new Cache();
 
+const app = express();
 app.use(express.json());
+
+app.get("/api", async (req, res) => {
+  try {
+    const keys = cache.keys();
+
+    res.json({ keys });
+  } catch (e) {
+    console.error(e);
+
+    res.sendStatus(500);
+  }
+});
 
 app.get("/api/:key", async (req, res) => {
   try {
@@ -23,14 +38,23 @@ app.get("/api/:key", async (req, res) => {
 
 app.post("/api", async (req, res) => {
   try {
-    const body = req.body;
+    const data = req.body;
 
-    cache.create(body);
+    const { key } = cache.create(data);
 
-    res.sendStatus(201);
+    res.send({ key });
   } catch (e) {
     res.sendStatus(500);
   }
+});
+
+app.get("/", (req, res) => {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const htmlContent = readFileSync(
+    join(__dirname, "index.html"),
+    "utf8",
+  ).replace(/{{PORT}}/g, port);
+  res.send(htmlContent);
 });
 
 const server = app.listen(port, () => {

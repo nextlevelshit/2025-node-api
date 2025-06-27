@@ -35,9 +35,10 @@ export class Cache {
       throw new Error("Key already in use");
     }
 
-    const result = this.cache.set(key, data);
+    this.cache.set(key, data);
 
-    console.table(result.entries());
+    console.debug(`Created key: ${key}`);
+    console.table(Array.from(this.cache.entries()));
 
     return { key, data };
   }
@@ -53,10 +54,9 @@ export class Cache {
     }
 
     console.debug(`Overriding ${key}`, data);
+    this.cache.set(key, data);
 
-    const result = this.cache.set(key, data);
-
-    console.table(result.entries());
+    console.table(Array.from(this.cache.entries()));
 
     return { key, data };
   }
@@ -74,16 +74,11 @@ export class Cache {
   /**
    * Retrieve all keys currently stored in the cache.
    */
-  get keys() {
+  keys() {
     return Array.from(this.cache.keys());
   }
 
   /**
-   * Retrieve all values currently stored in the cache.
-   */
-  get values() {
-    return Array.from(this.cache.values());
-  }
 
   /**
    * Clear the entire cache.

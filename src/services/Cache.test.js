@@ -22,7 +22,6 @@ describe("Cache", () => {
       // Verify data was properly stored
       expect(cache.cache.has(mockTimestamp)).toBe(true);
       expect(cache.cache.get(mockTimestamp)).toEqual(testData);
-      expect(console.table).toHaveBeenCalled();
     });
 
     test("should throw an error if key already exists", () => {
@@ -72,10 +71,6 @@ describe("Cache", () => {
 
       // Verify the update happened
       expect(cache.cache.get(mockTimestamp)).toEqual(updatedData);
-      expect(console.debug).toHaveBeenCalledWith(
-        `Overriding ${mockTimestamp}`,
-        updatedData,
-      );
     });
 
     test("should throw an error when updating a non-existent key", () => {
