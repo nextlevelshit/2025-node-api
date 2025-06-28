@@ -6,9 +6,9 @@
 export class Cache {
   /**
    * Constructor for the Cache service.
-   * @param options {{override: boolean, debug: boolean}} - Configuration options for the cache
+   * @param options {{override?: boolean, debug?: boolean}} - Configuration options for the cache
    */
-  constructor(options = { override: false, debug: false,  }) {
+  constructor(options = { override: false, debug: false }) {
     this.options = options;
     this.cache = new Map();
   }
@@ -34,18 +34,16 @@ export class Cache {
    * @returns {string} - A unique identifier for the created cache entry
    */
   create(data, key = Date.now().toString()) {
-    if (this.options.debug) {
-      this.log(`Creating key: ${key}`, data);
-    }
+    this.log(`Creating key: ${key}`, data);
 
     if (this.cache.has(key)) {
       if (this.options.override) {
-          console.warn(`Key ${key} already exists, overriding.`);
-          const existingData = this.cache.get(key);
-          this.cache.set(key, {
-            ...existingData,
-            ...data,
-          });
+        this.log(`Key ${key} already exists, overriding.`);
+        const existingData = this.cache.get(key);
+        this.cache.set(key, {
+          ...existingData,
+          ...data,
+        });
       } else {
         this.log("Overriding is disabled in options.");
         this.log(`Key ${key} already exists, not overriding.`);
@@ -55,7 +53,7 @@ export class Cache {
       this.cache.set(key, data);
     }
 
-      this.logTable(Array.from(this.values));
+    this.logTable(Array.from(this.values));
 
     return key;
   }
@@ -66,7 +64,7 @@ export class Cache {
    * @param data {unknown} - The new data to associate with the key
    * @returns {{key: string, data: unknown}} - An object containing the key and updated data
    */
-  update(key, data: unknown) {
+  update(key, data) {
     if (!this.cache.has(key)) {
       throw new Error("Key not found");
     }
@@ -74,10 +72,10 @@ export class Cache {
     const existingData = this.cache.get(key);
     const newData = { ...existingData, ...data };
 
-      this.cache.set(key, newData);
+    this.cache.set(key, newData);
 
-        this.log(`Overriding ${key}`, data);
-        this.logTable(Array.from(this.cache.entries()));
+    this.log(`Overriding ${key}`, data);
+    this.logTable(Array.from(this.cache.entries()));
 
     return { key, data: newData };
   }
@@ -98,8 +96,7 @@ export class Cache {
    * @returns {string[]} - An array of all keys in the cache
    */
   get keys() {
-    // Eqivalent to [...this.cache.keys()]
-    return Array.from(this.cache.keys());
+    return Array.from(this.cache.keys()); // Eqivalent to [...this.cache.keys()]
   }
 
   /**
@@ -107,8 +104,7 @@ export class Cache {
    * @returns {unknown[]} - An array of all values in the cache
    */
   get values() {
-    // Equivalent to [...this.cache.values()]
-    return Array.from(this.cache.values());
+    return Array.from(this.cache.values()); // Equivalent to [...this.cache.values()]
   }
 
   /**
