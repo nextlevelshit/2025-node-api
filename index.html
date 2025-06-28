@@ -34,6 +34,7 @@
         padding: 10px;
         margin: 5px 0;
         font-family: inherit;
+        font-weight: 600;
         border: 1px solid #666;
         box-sizing: border-box;
       }
@@ -492,12 +493,32 @@
           return;
         }
 
-        const responseDiv = document.getElementById("statsResponse");
-        showResponse(
-          responseDiv,
-          "⚠️ Cache clearing not implemented in API yet",
-          "warning",
-        );
+        try {
+          const response = await fetch(`${BASE_URL}/api`, {
+            method: "DELETE",
+          });
+          const data = await response.json();
+          if (response.ok) {
+            showResponse(
+              document.getElementById("statsResponse"),
+              `✅ Cache cleared successfully!`,
+              "success",
+            );
+            getAllKeys(); // Refresh keys
+          } else {
+            showResponse(
+              document.getElementById("statsResponse"),
+              `❌ Failed to clear cache: ${data.message || response.statusText}`,
+              "error",
+            );
+          }
+        } catch (e) {
+          showResponse(
+            document.getElementById("statsResponse"),
+            `❌ Network error: ${e.message}`,
+            "error",
+          );
+        }
       }
 
       // Comprehensive CRUD test

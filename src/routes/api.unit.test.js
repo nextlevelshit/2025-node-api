@@ -15,6 +15,7 @@ describe("API Routes - Unit Tests", () => {
       create: vi.fn(),
       update: vi.fn(),
       remove: vi.fn(),
+      clear: vi.fn(),
       cache: new Map(), // For the has() check in PUT route
     };
 
@@ -158,6 +159,26 @@ describe("API Routes - Unit Tests", () => {
 
       expect(response.status).toBe(404);
       expect(response.body).toEqual({ error: "Key not found" });
+    });
+  });
+
+  describe("/api DELETE", () => {
+    test("clears all cache entries", async () => {
+      const response = await request(app).delete("/api");
+
+      expect(response.status).toBe(204);
+      expect(mockCache.clear).toHaveBeenCalled();
+    });
+
+    test("handles clear errors", async () => {
+      mockCache.clear.mockImplementation(() => {
+        throw new Error("Clear failed");
+      });
+
+      const response = await request(app).delete("/api");
+
+      expect(response.status).toBe(500);
+      expect(console.error).toHaveBeenCalled();
     });
   });
 });

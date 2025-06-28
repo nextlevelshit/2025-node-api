@@ -61,9 +61,19 @@ export function createApiRoutes(cache) {
   router.delete("/:key", (req, res) => {
     try {
       cache.remove(req.params.key);
-      res.status(204).send();
+      res.sendStatus(204);
     } catch (e) {
       res.status(404).json({ error: "Key not found" });
+    }
+  });
+
+  router.delete("/", (req, res) => {
+    try {
+      cache.clear();
+      res.sendStatus(204);
+    } catch (e) {
+      console.error(e);
+      res.sendStatus(500);
     }
   });
 

@@ -5,7 +5,7 @@ describe("Cache - Unit Tests", () => {
   let cache;
 
   beforeEach(() => {
-    cache = new Cache();
+    cache = new Cache({ debug: false });
     // Silence console for cleaner test output
     console.table = vi.fn();
     console.debug = vi.fn();

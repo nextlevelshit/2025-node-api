@@ -18,6 +18,7 @@
   "description": "Modern Node.js API with ES modules and Vitest",
   "nodemonConfig": {
     "env": {
+      "DEBUG": "router:*",
       "PORT": "1312"
     }
   },

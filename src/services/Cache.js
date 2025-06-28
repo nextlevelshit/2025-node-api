@@ -8,7 +8,7 @@ export class Cache {
    * Constructor for the Cache service.
    * @param options {{override?: boolean, debug?: boolean}} - Configuration options for the cache
    */
-  constructor(options = { override: false, debug: false }) {
+  constructor(options = { override: false, debug: true }) {
     this.options = options;
     this.cache = new Map();
   }

@@ -28,7 +28,6 @@ describe("E2E Tests - Real Server", () => {
         clearTimeout(timeout);
         if (err) reject(err);
         else {
-          console.log(`Test server running on ${TEST_PORT}`);
           resolve();
         }
       });

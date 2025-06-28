@@ -6,7 +6,18 @@ const cache = new Cache();
 const app = createApp(cache, { port });
 
 const server = app.listen(port, () => {
-  console.log(`Server läuft auf ${port}`);
+  const stats = () =>
+    console.debug({
+      "Server URL": `http://localhost:${port}`,
+      "API Endpoints": `http://localhost:${port}/api`,
+      "Cache Size": cache.cache.size,
+      "Cache Keys": cache.keys.join(),
+      Operations: {
+        "Clear Cache": `curl -X DELETE http://localhost:${port}/api`,
+      },
+    });
+
+  setInterval(stats, 3_000);
 });
 
 process.on("SIGINT", () => {
