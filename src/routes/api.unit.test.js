@@ -124,6 +124,21 @@ describe("API Routes - Unit Tests", () => {
       expect(response.body).toEqual({ key: "new-key" });
       expect(mockCache.create).toHaveBeenCalledWith(newData, "new-key");
     });
+
+    test("handles update errors", async () => {
+      const updateData = { status: "updated" };
+
+      mockCache.cache.set("existing", { original: "data" });
+      mockCache.update.mockImplementation(() => {
+        throw new Error("Update failed");
+      });
+
+      const response = await request(app).put("/api/existing").send(updateData);
+
+      expect(response.status).toBe(500);
+      expect(mockCache.update).toHaveBeenCalledWith("existing", updateData);
+      expect(console.error).toHaveBeenCalled();
+    });
   });
 
   describe("DELETE /api/:key", () => {

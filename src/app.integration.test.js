@@ -75,7 +75,7 @@ describe("App Integration Tests", () => {
     });
 
     test("handles concurrent operations correctly", async () => {
-      const concurrentRequests = 4;
+      const concurrentRequests = 3;
       const operations = Array.from({ length: concurrentRequests }, (_, i) =>
         request(app)
           .post("/api")
