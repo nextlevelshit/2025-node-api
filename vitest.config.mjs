@@ -15,7 +15,8 @@ export default defineConfig({
       exclude: [
         "node_modules/",
         "coverage/",
-        "**/*.config.{js,ts}",
+        "src/config/",
+        "**/*.config.{js,ts,mjs}",
         "**/*.test.{js,ts}",
         "**/index.js", // Main entry point
       ],
