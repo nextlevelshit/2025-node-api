@@ -12,7 +12,7 @@ app.use(express.json());
 
 app.get("/api", async (req, res) => {
   try {
-    const keys = cache.keys();
+    const keys = cache.keys;
 
     res.json({ keys });
   } catch (e) {
