@@ -104,7 +104,7 @@
   </head>
   <body>
     <h1>Cache API Interface</h1>
-    <p>Complete CRUD operations for your cache service on localhost:{{PORT}}</p>
+    <p>Complete CRUD operations for your cache service on localhost:1312</p>
 
     <div class="grid">
       <!-- GET All Keys Section -->
@@ -169,7 +169,7 @@
 
     <script>
       // Base URL - adjust if your server runs elsewhere
-      const BASE_URL = "http://localhost:{{PORT}}/api";
+      const BASE_URL = "http://localhost:1312/api";
 
       // GET all keys
       async function getAllKeys() {
@@ -466,7 +466,7 @@
               `📊 Cache Statistics\n\n` +
               `Total items: ${data.keys.length}\n` +
               `Keys: ${data.keys.length > 0 ? data.keys.join(", ") : "None"}\n` +
-              `Server: localhost:{{PORT}}\n` +
+              `Server: localhost:1312\n` +
               `API Base: ${BASE_URL}\n` +
               `Last updated: ${new Date().toLocaleString("de-DE")}`;
 
