@@ -1,9 +1,8 @@
 import { Router } from "express";
-import { Cache } from "../services/Cache.js";
 
 /**
  * Creates API routes for managing cache entries.
- * @param cache {Cache} - An instance of the Cache service
+ * @param cache {typeof import("../services/Cache.js").Cache} - An instance of the Cache service
  * @returns {typeof Router}
  */
 export function createApiRoutes(cache) {
@@ -36,6 +35,7 @@ export function createApiRoutes(cache) {
       const key = cache.create(data);
       res.status(201).json({ key });
     } catch (e) {
+      console.error(e);
       res.sendStatus(500);
     }
   });
@@ -63,6 +63,7 @@ export function createApiRoutes(cache) {
       cache.remove(req.params.key);
       res.sendStatus(204);
     } catch (e) {
+      console.error(e);
       res.status(404).json({ error: "Key not found" });
     }
   });

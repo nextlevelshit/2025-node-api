@@ -1,3 +1,4 @@
+import { setInterval } from "node:timers/promises";
 import { port } from "./src/config/constants.js";
 import { Cache } from "./src/services/Cache.js";
 import { createApp } from "./src/app.js";

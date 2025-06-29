@@ -74,9 +74,26 @@ curl -X PUT http://localhost:1312/api/1735401234567 \
 # Returns: {"key":"1735401234567","data":{"name":"Wolfgang","city":"Stuttgart","age":25}}
 ```
 
-## Testing Strategy: The Three Pillars 🏛️
+## Testing Strategy: The Four Pillars 🏛️
 
-This project implements a comprehensive three-tier testing approach that every modern developer should understand. Each tier serves a specific purpose and tests different aspects of your application.
+This project implements a comprehensive four-tier testing approach that every modern developer should understand. Each tier serves a specific purpose and tests different aspects of your application.
+
+### Static Analysis: Code Quality Checks 🔍
+
+**What it tests:** Syntax errors and code quality issues without execution
+**Why it matters:** Instant feedback - catches bugs before any code runs
+**When to run:** Before running any tests
+
+```bash
+npm run lint  # Check for basic issues
+```
+
+**Key characteristics:**
+
+- Runs in milliseconds
+- Catches syntax errors, unused variables, undefined references
+- Zero runtime overhead
+- First line of defense
 
 ### Unit Tests: Testing in Isolation 🔬
 
@@ -87,6 +104,7 @@ This project implements a comprehensive three-tier testing approach that every m
 ```javascript
 // From Cache.unit.test.js
 test("creates and retrieves data with custom key", () => {
+  const cache = new Cache();
   const testData = { user: "wolfgang", city: "stuttgart" };
   const key = cache.create(testData, "custom-key");
 
@@ -191,13 +209,16 @@ Our E2E tests validate:
 # Development with hot reload
 npm start
 
+# Static analysis (run first)
+npm run lint
+
 # Run all tests (recommended for CI/CD)
 npm test
 
 # Run specific test categories
 npm run test.unit        # ~50ms - Run constantly during development
 npm run test.integration # ~200ms - Run before commits
-npm run test.e2e         # ~1000ms - Run before deploymentsf
+npm run test.e2e         # ~1000ms - Run before deployments
 
 # Test with coverage report
 npm run test.coverage
@@ -214,10 +235,10 @@ npm run format
 npm run test.unit -- --watch
 ```
 
-**Before git commit:** Unit + Integration tests
+**Before git commit:** Static + Unit + Integration tests
 
 ```bash
-npm run test.unit && npm run test.integration
+npm run lint && npm run test.unit && npm run test.integration
 ```
 
 **Before deployment:** All tests

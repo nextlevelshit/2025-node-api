@@ -11,6 +11,7 @@
     "test.e2e": "vitest run --reporter=verbose *.e2e.test.js",
     "test.watch": "vitest --watch",
     "test.coverage": "vitest run --coverage",
+    "lint": "eslint . --ext .js",
     "format": "prettier --write '**/*.{js,mjs,json,md,html}'"
   },
   "author": "Michael Czechowski <mail@m6c9.de>",
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9.30.0",
     "nodemon": "^3.1.10",
     "prettier": "^3.3.3",
     "supertest": "^7.1.0",
