@@ -16,7 +16,7 @@ This isn't your typical Express boilerplate. We're running:
 
 - **Express 5.x** with ES modules (no more `require()` nonsense)
 - **In-memory cache service** for blazing-fast data operations
-- **Three-tier testing strategy** with unit, integration, and E2E coverage
+- **Four-tier testing strategy** with static analysis, unit, integration, and E2E coverage
 - **Zero dependencies** for core functionality (Express + testing tools only)
 - **Modern JavaScript** patterns throughout
 - **Proper error handling** and HTTP status codes
@@ -76,30 +76,31 @@ curl -X PUT http://localhost:1312/api/1735401234567 \
 
 ## Testing Strategy: The Four Pillars 🏛️
 
-This project implements a comprehensive four-tier testing approach that every modern developer should understand. Each tier serves a specific purpose and tests different aspects of your application.
+This project implements a comprehensive four-tier testing approach. Each tier serves a specific purpose and tests different aspects of your application with increasing realism but decreasing speed.
 
-### Static Analysis: Code Quality Checks 🔍
+### 1. Static Analysis: Code Quality Checks 🔍
 
-**What it tests:** Syntax errors and code quality issues without execution
-**Why it matters:** Instant feedback - catches bugs before any code runs
-**When to run:** Before running any tests
+**What it tests:** Syntax errors and code quality issues without execution  
+**Tool:** ESLint  
+**Speed:** ⚡ ~10ms  
+**When to run:** Before every commit
 
 ```bash
-npm run lint  # Check for basic issues
+npm run lint
 ```
 
 **Key characteristics:**
 
-- Runs in milliseconds
 - Catches syntax errors, unused variables, undefined references
 - Zero runtime overhead
-- First line of defense
+- First line of defense against bugs
 
-### Unit Tests: Testing in Isolation 🔬
+### 2. Unit Tests: Testing in Isolation 🔬
 
-**What they test:** Individual functions and classes in complete isolation
-**Why they matter:** Fast, reliable, and help you catch bugs early
-**When to write them:** For every public method and edge case
+**What they test:** Individual functions and classes with all dependencies mocked  
+**Tool:** Vitest with mocks  
+**Speed:** ⚡ ~50ms  
+**When to run:** Constantly during development
 
 ```javascript
 // From Cache.unit.test.js
@@ -115,67 +116,63 @@ test("creates and retrieves data with custom key", () => {
 
 **Key characteristics:**
 
-- No external dependencies (database, network, filesystem)
-- Use mocks/stubs for dependencies
-- Run in milliseconds
-- Test one thing at a time
+- **Complete isolation** - every dependency is mocked
+- **Deterministic** - same input always produces same output
+- **Fast** - no I/O, no network, no filesystem
+- **Focused** - test one function at a time
 
-Our unit tests cover:
+### 3. Integration Tests: Component Interaction Testing 🔗
 
-- Cache CRUD operations with various data types
-- Error handling for edge cases (missing keys, duplicates)
-- Override functionality and merge behavior
-- Debug logging capabilities
-
-### Integration Tests: Testing Component Interactions 🔗
-
-**What they test:** How different parts of your system work together
-**Why they matter:** Catch issues that only appear when components interact
-**When to write them:** For critical workflows and data flow
+**What they test:** How your components work together, but still in-process  
+**Tool:** Vitest + Supertest (no real server)  
+**Speed:** 🟡 ~200ms  
+**When to run:** Before commits
 
 ```javascript
 // From app.integration.test.js
+import request from "supertest"; // ← Key difference: supertest, not fetch
+import { createApp } from "./app.js";
+
 test("full CRUD lifecycle with real cache", async () => {
-  // Create
-  const createResponse = await request(app)
+  // supertest creates a test server internally - no real HTTP
+  const createResponse = await request(app) // ← In-process request
     .post("/api")
     .send({ name: "integration-test", status: "active" });
 
   expect(createResponse.status).toBe(201);
   const { key } = createResponse.body;
 
-  // Verify it's actually in the cache
+  // Verify it's actually in the cache (real cache instance)
   expect(cache.keys).toContain(key);
-
-  // Read, Update, Delete...
 });
 ```
 
 **Key characteristics:**
 
-- Real components talking to each other
-- Real cache instance, real Express app
-- No external services (still no database/network)
-- Test complete user workflows
+- **Real components** - actual Cache and Express app instances
+- **Supertest magic** - simulates HTTP without actual server startup
+- **In-process** - everything runs in the same Node.js process
+- **No network** - no real TCP connections or ports
 
-Our integration tests verify:
+### 4. E2E Tests: Full Stack Reality 🌐
 
-- Full CRUD lifecycle through HTTP endpoints
-- Cache and API routes working together
-- Concurrent operations and data consistency
-- Error scenarios with real component interactions
-
-### E2E Tests: Testing the Full Stack 🌐
-
-**What they test:** Your entire application as a user would experience it
-**Why they matter:** Ensure everything works in a production-like environment
-**When to write them:** For critical user journeys and deployment confidence
+**What they test:** Your entire application exactly as users experience it  
+**Tool:** Vitest + real fetch() + real server  
+**Speed:** 🔴 ~1000ms  
+**When to run:** Before deployments
 
 ```javascript
 // From index.e2e.test.js
+beforeAll(async () => {
+  // Start actual server on real port
+  server = createServer(app);
+  await new Promise((resolve) => server.listen(TEST_PORT, resolve));
+});
+
 test("complete user journey", async () => {
-  // Real HTTP request to actual running server
+  // Real HTTP request over TCP to actual running server
   const createResponse = await fetch(`${baseUrl}/api`, {
+    // ← Real fetch, not supertest
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -185,23 +182,41 @@ test("complete user journey", async () => {
   });
 
   expect(createResponse.status).toBe(201);
-  // Continue with real HTTP calls...
 });
 ```
 
 **Key characteristics:**
 
-- Real server running on actual port
-- Real HTTP requests using `fetch()`
-- Tests the entire stack from network to storage
-- Simulates actual user interactions
+- **Real server** - actual HTTP server listening on TCP port
+- **Real network** - genuine HTTP requests over localhost
+- **Real environment** - tests server startup, CORS, middleware stack
+- **User perspective** - exactly what your users experience
 
-Our E2E tests validate:
+## The Critical Differences Explained
 
-- Server startup and shutdown procedures
-- Real HTTP requests and responses
-- Load handling and data consistency under stress
-- Static content serving and error handling
+| Test Type       | Import Pattern                     | Request Method              | Server Status | Speed     | What's Real             |
+| --------------- | ---------------------------------- | --------------------------- | ------------- | --------- | ----------------------- |
+| **Unit**        | `import { Cache }`                 | Direct method calls         | No server     | ⚡ 10ms   | Nothing - all mocked    |
+| **Integration** | `import request from "supertest"`  | `request(app).get()`        | Simulated     | 🟡 100ms  | Components, not network |
+| **E2E**         | `beforeAll(() => server.listen())` | `fetch("http://localhost")` | Real server   | 🔴 1000ms | Everything              |
+
+### Why This Matters
+
+**Integration tests catch:** "My cache works, my routes work, but they don't work _together_"
+
+```javascript
+// Integration - tests that cache + routes integrate properly
+const response = await request(app).post("/api").send(data);
+expect(cache.keys).toContain(response.body.key); // Direct cache access
+```
+
+**E2E tests catch:** "Everything works in isolation, but fails when deployed"
+
+```javascript
+// E2E - tests the complete network stack
+const response = await fetch(`http://localhost:${port}/api`, { ... });
+// No direct cache access - testing through the network boundary
+```
 
 ## Test Execution & Development Workflow
 
@@ -209,105 +224,71 @@ Our E2E tests validate:
 # Development with hot reload
 npm start
 
-# Static analysis (run first)
-npm run lint
+# Run specific test tiers (in order of feedback speed)
+npm run test.unit        # 50ms - Run constantly
+npm run test.integration # 200ms - Run before commits
+npm run test.e2e         # 1000ms - Run before deployments
 
-# Run all tests (recommended for CI/CD)
+# Run all tests
 npm test
 
-# Run specific test categories
-npm run test.unit        # ~50ms - Run constantly during development
-npm run test.integration # ~200ms - Run before commits
-npm run test.e2e         # ~1000ms - Run before deployments
-
-# Test with coverage report
+# Coverage report
 npm run test.coverage
-
-# Format code
-npm run format
 ```
 
-### When to Run What Tests
+### The Testing Pyramid in Action
 
-**During development:** Unit tests only (fast feedback loop)
-
-```bash
-npm run test.unit -- --watch
+```
+    E2E (Few, Slow, High Confidence)
+      /\
+     /  \
+    /    \   Integration (Some, Medium, Component Confidence)
+   /      \
+  /        \
+ /__________\ Unit (Many, Fast, Logic Confidence)
 ```
 
-**Before git commit:** Static + Unit + Integration tests
+**Development workflow:**
 
-```bash
-npm run lint && npm run test.unit && npm run test.integration
-```
+1. **Write unit tests first** - fast feedback on logic
+2. **Add integration tests** - verify components play nice
+3. **Minimal E2E tests** - critical user journeys only
 
-**Before deployment:** All tests
+## Test Environment Setup
 
-```bash
-npm test
-```
-
-## Test Doubles & Mocking Strategy
-
-### Unit Test Mocks
+### Unit Tests
 
 ```javascript
-// From api.unit.test.js - Complete cache mock
-mockCache = {
-  keys: [],
+// All dependencies mocked
+const mockCache = {
   get: vi.fn(),
   create: vi.fn(),
-  update: vi.fn(),
-  remove: vi.fn(),
-  clear: vi.fn(),
-  cache: new Map(), // For the has() check in PUT route
+  // ... complete mock interface
 };
 ```
 
-### Integration Test Reality
+### Integration Tests
 
 ```javascript
-// From app.integration.test.js - Real instances
+// Real instances, no mocks
 cache = new Cache({ debug: false });
 app = createApp(cache, { port: 1312 });
+// supertest handles the HTTP simulation
 ```
 
-### E2E Test Environment
+### E2E Tests
 
 ```javascript
-// From index.e2e.test.js - Real server
-server = createServer(app);
-server.listen(TEST_PORT, callback);
+// Real server lifecycle
+beforeAll(async () => {
+  server = createServer(app);
+  await new Promise((resolve) => server.listen(TEST_PORT, resolve));
+});
+
+afterAll(async () => {
+  await new Promise((resolve) => server.close(resolve));
+});
 ```
-
-## Testing Best Practices Demonstrated
-
-1. **Test Independence:** Each test can run in isolation
-2. **Descriptive Names:** Tests read like specifications
-3. **Arrange-Act-Assert:** Clear test structure
-4. **Error Testing:** Both happy path and edge cases
-5. **Async Handling:** Proper `async/await` usage
-6. **Resource Cleanup:** `beforeEach`/`afterAll` hooks
-7. **Realistic Data:** Tests use domain-appropriate examples
-
-## Development
-
-### Quick Start
-
-```bash
-# Clone and install
-npm install
-
-# Development with hot reload
-npm start
-
-# Run tests in watch mode during development
-npm run test.unit -- --watch
-```
-
-### Environment
-
-The dev server runs on port `1312` (configurable via `PORT` env var). The cache service initializes empty on startup - perfect for development iteration.
 
 ## Cache Service Deep Dive
 
@@ -357,20 +338,13 @@ This is a development/learning project. For production:
 
 ## Testing Philosophy
 
-> "Confidence comes from having the right tests, not the most tests."
+> "The right test at the right level catches bugs at the right time."
 
-This project demonstrates that **test quality > test quantity**. Each test tier serves a specific purpose:
+This project demonstrates that **test architecture > test coverage**. Each tier serves a specific purpose:
 
-- **Unit tests** give you confidence in your logic
-- **Integration tests** give you confidence in your architecture
-- **E2E tests** give you confidence in your user experience
+- **Static analysis** → Catch syntax errors before runtime
+- **Unit tests** → Fast feedback on logic errors
+- **Integration tests** → Component interaction verification
+- **E2E tests** → User experience validation
 
-The three-tier approach ensures you catch bugs at the right level - fixing a unit test is faster than debugging an E2E failure.
-
-## License
-
-WTFPL - Do whatever you want with this code. It's 2025, information wants to be free.
-
----
-
-_Built with ❤️ for the next generation of DHBW students who will change the world_
+The four-tier approach ensures you catch bugs at the optimal level - fixing a unit test takes seconds, debugging an E2E failure takes minutes.
