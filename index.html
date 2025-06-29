@@ -7,7 +7,7 @@
     <style>
       /* Minimal brutalist styling because we're not here for beauty contests */
       body {
-        font-family: "Courier New", monospace;
+        font-family: "Courier New", "Source Code Pro", monospace;
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
@@ -180,19 +180,19 @@
           const data = await response.json();
 
           if (response.ok) {
-            let output = `Found ${data.keys.length} keys:\n\n`;
+            // let output = `Found ${data.keys.length} keys:\n\n`;
+            let output = "";
 
             if (data.keys.length === 0) {
               output += "Cache is empty 🗑️";
             } else {
-              output += data.keys.map((key) => `📝 ${key}`).join("\n");
+              // output += data.keys.map((key) => `📝 ${key}`).join("\n");
 
               // Add clickable key elements
               setTimeout(() => {
                 const keyContainer = document.createElement("div");
                 keyContainer.style.marginTop = "10px";
-                keyContainer.innerHTML =
-                  "<small>Click keys to select:</small><br>";
+                keyContainer.innerHTML = `<strong>Found ${data.keys.length} keys:</strong><br><br>`;
 
                 data.keys.forEach((key) => {
                   const keySpan = document.createElement("span");
@@ -487,17 +487,19 @@
         }
       }
 
-      // Clear entire cache (dangerous!)
+      /**
+       * Clear all cached data
+       * @returns {Promise<void>}
+       */
       async function clearCache() {
         if (!confirm("⚠️ This will delete ALL cached data. Are you sure?")) {
           return;
         }
 
         try {
-          const response = await fetch(`${BASE_URL}/api`, {
+          const response = await fetch(`${BASE_URL}`, {
             method: "DELETE",
           });
-          const data = await response.json();
           if (response.ok) {
             showResponse(
               document.getElementById("statsResponse"),

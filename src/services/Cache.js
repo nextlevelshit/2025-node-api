@@ -121,7 +121,7 @@ export class Cache {
    */
   log(message) {
     if (this.options.debug) {
-      console.log(message);
+      console.log(`[Cache] ${message}`);
     }
   }
 
@@ -131,7 +131,7 @@ export class Cache {
    */
   logTable(message) {
     if (this.options.debug) {
-      console.table(message);
+      console.table(`[Cache] ${message}`);
     }
   }
 }

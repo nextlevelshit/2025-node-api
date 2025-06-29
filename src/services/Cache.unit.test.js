@@ -94,7 +94,7 @@ describe("Cache - Unit Tests", () => {
       overrideCache.create({ updated: true }, "warn-test");
 
       expect(console.log).toHaveBeenCalledWith(
-        "Key warn-test already exists, overriding.",
+        "[Cache] Key warn-test already exists, overriding.",
       );
     });
   });
@@ -127,7 +127,9 @@ describe("Cache - Unit Tests", () => {
 
       debugCache.create({ test: "data" }, "debug-test");
 
-      expect(console.log).toHaveBeenCalledWith("Creating key: debug-test");
+      expect(console.log).toHaveBeenCalledWith(
+        "[Cache] Creating key: debug-test",
+      );
     });
 
     test("does not log when debug mode is disabled", () => {

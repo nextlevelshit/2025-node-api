@@ -1,10 +1,14 @@
 import express from "express";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-import { readFileSync } from "fs";
 import { createApiRoutes } from "./routes/api.js";
+import { Html } from "./services/Html.js";
 
-export function createApp(cache, options = {}) {
+/**
+ * Creates an Express application with API routes and static HTML serving.
+ * @param cache - An instance of the Cache service for managing data
+ * @param options - {{port: string}} Optional configuration options for the app
+ * @returns {Express}
+ */
+export function createApp(cache, options) {
   const app = express();
 
   // Enable cors
@@ -21,18 +25,19 @@ export function createApp(cache, options = {}) {
   app.use(express.json());
   // Add routes for API endpoints
   app.use("/api", createApiRoutes(cache));
-
   // Static HTML route
   app.get("/", (req, res) => {
-    const __dirname = dirname(fileURLToPath(import.meta.url));
-    const port = options.port;
+    const html = new Html({ debug: process.env.NODE_ENV === "development" });
 
-    const htmlContent = readFileSync(
-      join(__dirname, "../index.html"),
-      "utf8",
-    ).replace(/{{PORT}}/g, port);
-
-    res.send(htmlContent);
+    try {
+      const content = html.render("../../index.html", {
+        PORT: options.port,
+      });
+      res.send(content);
+    } catch (error) {
+      console.error("Template rendering failed:", error.message);
+      res.status(500).send("Internal Server Error");
+    }
   });
 
   return app;
