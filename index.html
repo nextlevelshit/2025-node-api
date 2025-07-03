@@ -104,7 +104,10 @@
   </head>
   <body>
     <h1>Cache API Interface</h1>
-    <p>Complete CRUD operations for your cache service on http://localhost:{{PORT}}</p>
+    <p>
+      Complete CRUD operations for your cache service on
+      <span id="serverUrl">http://localhost:1312</span>
+    </p>
 
     <div class="grid">
       <!-- GET All Keys Section -->
@@ -168,8 +171,30 @@
     </div>
 
     <script>
-      // Base URL - adjust if your server runs elsewhere
-      const BASE_URL = "http://localhost:{{PORT}}/api";
+      // Dynamic port detection from URL params
+      function getServerPort() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const portParam = urlParams.get("port");
+        // Use port from URL if valid, otherwise default to 1312
+        return portParam && !isNaN(portParam) && portParam > 0
+          ? portParam
+          : "1312";
+      }
+
+      // Base URL with dynamic port
+      const BASE_URL = `http://localhost:${getServerPort()}/api`;
+
+      function updateServerUrlDisplay() {
+        const serverUrlSpan = document.getElementById('serverUrl');
+        const port = getServerPort();
+        const urlParams = new URLSearchParams(window.location.search);
+
+        if (urlParams.get('port')) {
+          serverUrlSpan.textContent = `http://localhost:${port} (using ?port=${port})`;
+        } else {
+          serverUrlSpan.textContent = `http://localhost:${port} (or use ?port=XXXX)`;
+        }
+      }
 
       // GET all keys
       async function getAllKeys() {
@@ -180,14 +205,11 @@
           const data = await response.json();
 
           if (response.ok) {
-            // let output = `Found ${data.keys.length} keys:\n\n`;
             let output = "";
 
             if (data.keys.length === 0) {
               output += "Cache is empty 🗑️";
             } else {
-              // output += data.keys.map((key) => `📝 ${key}`).join("\n");
-
               // Add clickable key elements
               setTimeout(() => {
                 const keyContainer = document.createElement("div");
@@ -292,7 +314,7 @@
             showResponse(responseDiv, output, "success");
 
             // Auto-refresh keys and clear form
-            getAllKeys();
+            await getAllKeys();
             document.getElementById("postData").value = "";
           } else {
             const errorText = await response.text();
@@ -466,7 +488,7 @@
               `📊 Cache Statistics\n\n` +
               `Total items: ${data.keys.length}\n` +
               `Keys: ${data.keys.length > 0 ? data.keys.join(", ") : "None"}\n` +
-              `Server: localhost:{{PORT}}\n` +
+              `Server: localhost:${getServerPort()}\n` +
               `API Base: ${BASE_URL}\n` +
               `Last updated: ${new Date().toLocaleString("de-DE")}`;
 
@@ -673,7 +695,8 @@
       });
 
       // Auto-load keys on page load
-      document.addEventListener("DOMContentLoaded", function () {
+      document.addEventListener('DOMContentLoaded', function() {
+        updateServerUrlDisplay();
         getAllKeys();
       });
     </script>
