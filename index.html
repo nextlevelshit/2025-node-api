@@ -140,7 +140,6 @@
       </div>
       <div id="postResponse" class="response" style="display: none"></div>
     </div>
-
     <!-- UPDATE Section -->
     <div class="section">
       <h2>✏️ UPDATE Data</h2>
@@ -185,11 +184,11 @@
       const BASE_URL = `http://localhost:${getServerPort()}/api`;
 
       function updateServerUrlDisplay() {
-        const serverUrlSpan = document.getElementById('serverUrl');
+        const serverUrlSpan = document.getElementById("serverUrl");
         const port = getServerPort();
         const urlParams = new URLSearchParams(window.location.search);
 
-        if (urlParams.get('port')) {
+        if (urlParams.get("port")) {
           serverUrlSpan.textContent = `http://localhost:${port} (using ?port=${port})`;
         } else {
           serverUrlSpan.textContent = `http://localhost:${port} (or use ?port=XXXX)`;
@@ -695,7 +694,7 @@
       });
 
       // Auto-load keys on page load
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener("DOMContentLoaded", function () {
         updateServerUrlDisplay();
         getAllKeys();
       });
