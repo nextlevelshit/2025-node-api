@@ -87,14 +87,16 @@ describe("Cache - Unit Tests", () => {
       });
     });
 
-    test("warns when overriding with override and debug enabled", () => {
-      const overrideCache = new Cache({ override: true, debug: true });
+    test("warns when re-creating with override disabled and debug enabled", () => {
+      const overrideCache = new Cache({ override: false, debug: true });
 
       overrideCache.create({ original: true }, "warn-test");
-      overrideCache.create({ updated: true }, "warn-test");
 
+      expect(() =>
+        overrideCache.create({ updated: true }, "warn-test"),
+      ).toThrowError("Key already in use");
       expect(console.log).toHaveBeenCalledWith(
-        "[Cache] Key warn-test already exists, overriding.",
+        "[Cache] Key warn-test already exists, not overriding.",
       );
     });
   });
@@ -129,6 +131,7 @@ describe("Cache - Unit Tests", () => {
 
       expect(console.log).toHaveBeenCalledWith(
         "[Cache] Creating key: debug-test",
+        { test: "data" },
       );
     });
 

@@ -117,11 +117,16 @@ export class Cache {
 
   /**
    * Log a message to the console if debugging is enabled.
-   * @param message
+   * @param message - The message to log
+   * @param data - Additional arguments to log
    */
-  log(message) {
+  log(message, data) {
     if (this.options.debug) {
-      console.log(`[Cache] ${message}`);
+      if (data) {
+        console.log(`[Cache] ${message}`, data);
+      } else {
+        console.log(`[Cache] ${message}`);
+      }
     }
   }
 
@@ -131,7 +136,7 @@ export class Cache {
    */
   logTable(message) {
     if (this.options.debug) {
-      console.table(`[Cache] ${message}`);
+      console.table(message);
     }
   }
 }

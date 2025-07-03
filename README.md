@@ -154,6 +154,10 @@ test("full CRUD lifecycle with real cache", async () => {
 - **In-process** - everything runs in the same Node.js process
 - **No network** - no real TCP connections or ports
 
+**Further links:**
+
+- [Unit Testing vs Integration Testing - Key Differences](https://www.alexhyett.com/unit-testing-vs-integration-testing/#:~:text=Do%20integration%20tests%20use%20mocks,running%20just%20before%20a%20release.)
+
 ### 4. E2E Tests: Full Stack Reality 🌐
 
 **What they test:** Your entire application exactly as users experience it  

@@ -24,7 +24,7 @@ export function createApiRoutes(cache) {
       const data = cache.get(key);
       res.json(data);
     } catch (e) {
-      console.error(e);
+      console.error(e.message);
       res.sendStatus(404);
     }
   });
@@ -63,7 +63,7 @@ export function createApiRoutes(cache) {
       cache.remove(req.params.key);
       res.sendStatus(204);
     } catch (e) {
-      console.error(e);
+      console.error(e.message);
       res.status(404).json({ error: "Key not found" });
     }
   });
