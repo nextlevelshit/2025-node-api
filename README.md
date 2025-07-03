@@ -1,4 +1,4 @@
-# Node.js ExpressJS API (Caching Service) ⚡
+# Node.js ExpressJS API (Caching Service)
 
 A modern, minimal Node.js REST API built with ES modules, Express 5, and comprehensive testing via Vitest. Perfect for teaching contemporary web development patterns and testing strategies.
 

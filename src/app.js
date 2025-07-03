@@ -11,6 +11,8 @@ import { Html } from "./services/Html.js";
 export function createApp(cache, options) {
   const app = express();
 
+  // Remove x-powered-by header
+  app.disable("x-powered-by");
   // Enable cors
   app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
@@ -18,6 +20,7 @@ export function createApp(cache, options) {
       "Access-Control-Allow-Methods",
       "GET, POST, PUT, DELETE, OPTIONS",
     );
+    res.header("Cache-Control", "no-cache");
     res.header("Access-Control-Allow-Headers", "Content-Type");
     next();
   });
